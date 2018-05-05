@@ -3,7 +3,6 @@ import sys
 from pygame.locals import*
 import random
 from classe_tiles import*
-import ctypes
 from Ship_Shooter import*
 
 
@@ -14,7 +13,7 @@ pygame.display.set_caption("Accueil")
 
 
 #Chargement et collage du fond
-fond = pygame.image.load("fond.jpg").convert() #dimension: 672 sur 672
+fond = pygame.image.load("fond.png").convert() #dimension: 672 sur 672
 pac_fond = pygame.image.load("background1.png").convert()
 screen.blit(fond, (0,0))
 
@@ -48,6 +47,13 @@ persoQ_y =344
 persoQ_x2 =458
 persoQ_y2 =392
 
+#Chargement de la fenêtre "Victoire!"
+persoV = pygame.image.load("Victoire.png").convert_alpha()
+persoV_x = 186
+persoV_y = 236
+persoV_x2 = 486
+persoV_y2 =436
+
 #Rafraîchissement de l'écran
 pygame.display.flip()
 
@@ -55,6 +61,7 @@ pygame.display.flip()
 acc_continuer = 1
 pac_continuer = 0
 ship_continuer = 0
+victoire = 0
 restart = 0
 pacpac=0
 shipship=0
@@ -166,13 +173,18 @@ while infinite:   #Boucle infinie qui permet au jeu de tourner sans s'arrêter
 			
 		for event in pygame.event.get():   #Attente d'évènements
 			if event.type == pygame.QUIT: #Quitte le jeu si la fenêtre est fermée
-				acc_continuer = 0
-				continuer = 0
+				pac_continuer = 0
+				infinite = 0
 
 			if event.type == KEYDOWN:
 				if event.key == K_ESCAPE: #Retour à l'accueil si "échap"
 					acc_continuer=1
 					pac_continuer=0
+
+		#Si tout les fantomes meurt
+		if not ghost1.alive() and not ghost2.alive() and not ghost3.alive() and not ghost4.alive():
+			pac_continuer = 0
+			victoire = 1
 
 			
 		
@@ -199,7 +211,7 @@ while infinite:   #Boucle infinie qui permet au jeu de tourner sans s'arrêter
 		ship.rect.bottom= HAUTEUR*0.9
 		sec = 0
 		meteors.empty() #Suppression des anciennes météores et des nouvelles météores apparaissent
-		for i in range (15):
+		for i in range (8):
 			new_meteor()
   
 
@@ -207,10 +219,16 @@ while infinite:   #Boucle infinie qui permet au jeu de tourner sans s'arrêter
 		clock.tick(FPS)
 		#Décompte du temps, et on marque les secondes
 		temps_mtn = pygame.time.get_ticks()
+		temps_mtn2 = pygame.time.get_ticks()
 		if temps_mtn-temps >= 993:
 			print(sec)
 			sec += 1
 			temps=temps_mtn
+
+		if temps_mtn2-temps2 >= 3000:
+			new_meteor()
+			temps2=temps_mtn2
+			
 		
 		for event in pygame.event.get(): #Permet encore de quitter le jeu. Et arrête la musique si le quitte
 			if event.type == pygame.QUIT:
@@ -224,7 +242,8 @@ while infinite:   #Boucle infinie qui permet au jeu de tourner sans s'arrêter
 					pygame.mixer.music.stop()
 					acc_continuer = 1			
 						
-						
+		if ship.alive():
+			new_trail()			
 
 		
 		
@@ -268,7 +287,8 @@ while infinite:   #Boucle infinie qui permet au jeu de tourner sans s'arrêter
 			explosion2_sound.play()
 			new_meteor()	
 		
-		
+
+
 
 
 		draw_life_bar(screen, 5, HAUTEUR-15,ship.life)	#Dessine la barre d'HP
@@ -320,8 +340,26 @@ while infinite:   #Boucle infinie qui permet au jeu de tourner sans s'arrêter
 		
 		#Rafraichissement
 		pygame.display.flip()
+
+	while victoire:
+		for event in pygame.event.get():
+			if event.type == MOUSEBUTTONDOWN:    #Si on clique gauche
+				if event.button == 1:	
+					if event.pos[0]>= persoV_x and event.pos[0]<= persoV_x2 and event.pos[1]>= persoV_y and event.pos[1]<= persoV_y2 :   #si on clique sur la fenêtre du pacman
+																	pac_continuer = 0  #Ouvrir Pacman
+																	acc_continuer = 1
+
+			if event.type == MOUSEMOTION: #Segment qui permet de changer l'image si la souris passe dessus		
+					if event.pos[0]>= persoV_x and event.pos[0]<= persoV_x2 and event.pos[1]>= persoV_y and event.pos[1]<= persoV_y2 : #si souris passe sur fenêtre pacman
+																	persoP = pygame.image.load("Victoire.png").convert_alpha()
+					else :
+						persoP = pygame.image.load("Victoire.png").convert_alpha()
+
+
+		#Collage et rafraichissement
+		screen.blit(persoV, (persoV_x, persoV_y))
+		pygame.display.flip()
 		
 
-	
 
 pygame.quit()      
